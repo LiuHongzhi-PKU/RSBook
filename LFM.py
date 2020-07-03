@@ -29,6 +29,7 @@ seed_everything()
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
+# 获得dataloader，将数据读入后使用Interactions加载，Interactions是pytorch的取样器，可以返回df对应的u,i,r，详情见utils.py
 def getDataLoader(data_path, batch_size=2048):
     # load train data
     data_fields = ['user_id', 'item_id', 'rating', 'timestamp']
@@ -38,6 +39,8 @@ def getDataLoader(data_path, batch_size=2048):
         data_df = data_df.sample(n=int(len(data_df) * 0.1), replace=False)
     if IMPLICT:
         data_df.rating = (data_df.rating >= 5).astype(np.float32)
+
+    # 数据离散化编码
     le = preprocessing.LabelEncoder()
     le.fit(data_df['user_id'])
     data_df['user_id']=le.transform(data_df['user_id'])
@@ -81,12 +84,12 @@ class LFM(torch.nn.Module):
         self.user_embeddings = nn.Embedding(self.n_users, self.n_factors, sparse=sparse)
         self.item_embeddings = nn.Embedding(self.n_items, self.n_factors, sparse=sparse)
 
-
+        # pytorch中weight_decay相当于L2正则化，不过建议直接写成L2 loss，这个后面要改
         self.optimizer = torch.optim.SGD(self.parameters(),
                                    lr=lr, weight_decay=weight_decay)
         self=self.to(self.device)
 
-
+    # 前向计算，主要是计算评分，取embeddings并加bias
     def forward(self, users, items):
         users=users.to(self.device)
         items = items.to(self.device)
@@ -145,11 +148,10 @@ class LFM(torch.nn.Module):
                     col = col.long()
                     val = val.float()
                     preds = self.forward(row, col)
-                    # if IMPLICT:
-                    #     preds = sigmoid(preds.cpu().numpy())
                     y_pred += preds.tolist()
                     y_true += val.tolist()
                 y_true,y_pred=np.array(y_true), np.array(y_pred)
+                # 根据不同任务设定不同评分
                 if IMPLICT:
                     epoch_score = roc_auc_score(y_true,y_pred)
                     score='auc'
@@ -157,33 +159,7 @@ class LFM(torch.nn.Module):
                     epoch_score=sum([(y - x) ** 2 for x, y in zip(y_true, y_pred)]) / len(y_pred)
                     score='mse'
 
-
-                # user_item=loaders['valid'].dataset.user_item
-                # items = torch.arange(self.n_items).long()
-                # hit, rec_count, test_count,all_rec_items = 0,0,0,set()
-                # train_ui=loaders['train'].dataset.user_item
-                # for u in user_item:
-                #     target_items=user_item[u]
-                #     if u not in train_ui:continue
-                #     seen_items = np.array(list(train_ui[u].keys()))
-                #
-                #     users=[int(u)]*self.n_items
-                #     users = torch.Tensor(users).long()
-                #     scores=self.forward(users,items)
-                #     scores[seen_items]=-1e9
-                #     recs=np.argsort(scores)[-self.topn:].tolist()
-                #
-                #     for item in recs:  # 遍历给user推荐的物品
-                #         if item in target_items:  # 测试集中有该物品
-                #             hit += 1  # 推荐命中+1
-                #         all_rec_items.add(item)
-                #     rec_count += self.topn
-                #     test_count += len(target_items)
-                #     precision = hit / (1.0 * rec_count)
-                #     recall = hit / (1.0 * test_count)
-                #     coverage = len(all_rec_items) / (1.0 * self.n_items)
-
-                # # 计算top10的recall、precision、推荐物品覆盖率
+                # # 计算top10的recall、precision、推荐物品覆盖率 目前除了CPLR外均有问题，数值太小
                 user_item=loaders['valid'].dataset.user_item
                 items = torch.arange(self.n_items).long().to(self.device)
                 hit, rec_count, test_count,all_rec_items = 0,0,0,set()
@@ -196,18 +172,10 @@ class LFM(torch.nn.Module):
                     scores=self.forward(users,items)
                     if u in train_ui:
                         seen_items = np.array(list(train_ui[u].keys()))
+                        scores[seen_items]=-1e9 # 不推荐已评分过的物品
+                    else:continue # 跳过不在训练集中的用户
 
-                        scores[seen_items]=-1e9
-                    else:continue
-                    # print('s',len(seen_items))
-                    # seen_items = np.array(list(train_ui[u].keys()))
-                    # scores[seen_items] = -1e9
-                    # print('t',len(seen_items))
                     recs=np.argsort(scores)[-self.topn:].tolist()
-                    # print('------------')
-                    # print(seen_items)
-                    # print(recs)
-                    # print(scores[recs])
 
                     for item in recs:  # 遍历给user推荐的物品
                         if item in target_items:  # 测试集中有该物品
@@ -219,15 +187,16 @@ class LFM(torch.nn.Module):
                 recall = hit / (1.0 * test_count)
                 coverage = len(all_rec_items) / (1.0 * self.n_items)
 
-            if ((epoch + 1) % 1) == 0:
+            if ((epoch + 1) % 1) == 0: # 这个永远为true，可省略
                 print(
                     f'epoch {epoch + 1} train loss: {losses["train"]:.3f} valid loss {losses["valid"]:.3f} {score} {epoch_score:.3f}')
                 print('precisioin=%.4f\trecall=%.4f\tcoverage=%.4f' % (precision, recall, coverage))
-                print(hit, len(all_rec_items), len(user_item))
+                print(hit, len(all_rec_items), len(user_item)) # for debug，对于LFM很不正常，而CPLR比较正常
 
         return
 
 if __name__ == '__main__':
     input_size, loader=getDataLoader("../data/ml-100k/u.data")
+    # 从getDataLoader中得到模型需要的初始化参数，如用户数与物品数
     model = LFM(input_size[0],input_size[1])
     model.fit(loader,10)

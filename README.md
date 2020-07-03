@@ -4,6 +4,8 @@
 
 代码说明：每个算法单独一个文件，并自成一个class，每个文件中单独写了getDataLoader方法处理对应算法的输入，utils.py里包含了数据的取样器。
 
+LFM.py中有较详细的注释，其它算法的实现结构类似这个算法，可以参考LFM中的说明
+
 已整理的算法：LFM、BPR、CPLR、CPMF、SVDpp、WRMF
 
 debug的临时文件：CPLR2LFM.py（把正常的CPLR换成LFM模型，发现recall还是很低，很可能是模型出了问题）、测试LFM物品推荐的bug.ipynb（仍然没debug成功）
@@ -16,5 +18,7 @@ debug的临时文件：CPLR2LFM.py（把正常的CPLR换成LFM模型，发现rec
 3. 对于svdpp，计算时还没有使用均值作为评分预测，这个应该在一开始预处理每个用户评分的均值作为输入or方法的属性
 4. 补充其它算法，将未整理的算法进行整理
 5. 实现模型的save与load
+6. 目前正则化使用pytorch中weight_decay，后面应该要改成显式的L2 loss，才更加直观
+7. 指标评估可以放到utils，后面需要整理
 
 

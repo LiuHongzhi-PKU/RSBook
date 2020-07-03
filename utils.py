@@ -10,6 +10,7 @@ from tqdm import tqdm
 np.random.seed(1024)
 from operator import itemgetter
 
+# 输入u,i,r的df三元组，构建user_item的dict，取样时随机调用index
 class Interactions(data.Dataset):
     """
     Hold data in the form of an interactions matrix.
