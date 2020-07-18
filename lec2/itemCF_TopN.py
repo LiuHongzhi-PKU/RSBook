@@ -1,20 +1,27 @@
 import random
-import math
 import pandas as pd
 import numpy as np
 import math
-import torch
-import torch.nn as nn
+from utils import evaluate
+from utils import modelType
 
 from operator import itemgetter
 
 np.random.seed(1024)
 
 class itemCF():
+    # 参数:
+    # K：近邻数目
+    # N：物品推荐数目
+    # test_data：测试数据，二维字典。user->item->评分
+    # train_data：训练数据
+    # n_users：用户数目
+    # n_items：项目数目
+    # item_sim：项目之间的相似度。二维字典。i->j->相似度
     def __init__(self, data_file, K=20,N=10):
         self.K = K  # 近邻数
         self.N = N  # 物品推荐数
-        self.readData(data_file)    # 读取数据
+        self.loadData(data_file)    # 读取数据
         self.initModel()            # 初始化模型
 
     def initModel(self):
@@ -43,7 +50,7 @@ class itemCF():
             for v, cuv in related_items.items():
                 self.item_sim[u][v] = cuv / math.sqrt(item_cnt[u] * item_cnt[v])
 
-    def readData(self, data_file):
+    def loadData(self, data_file):
         data_fields = ['user_id', 'item_id', 'rating', 'timestamp']
         data = pd.read_table(data_file, names=data_fields)
 
@@ -64,7 +71,7 @@ class itemCF():
 
         print("Initialize end.The user number is:%d,item number is:%d" % (self.n_users, self.n_items))
 
-    def forward(self, user):
+    def predict(self, user):
         rank = dict()
         interacted_items = self.train_data[user]
 
@@ -78,40 +85,21 @@ class itemCF():
                 # rank[similar_item] += similarity_factor * rating
                 rank[similar_item] += similarity_factor
 
+        rec_list = []
+        rec_items = sorted(rank.items(), key=itemgetter(1), reverse=True)[0:self.N]
+        for item, score in rec_items:
+            rec_list.append(item)
+
         # 返回最大N个物品
-        return sorted(rank.items(), key=itemgetter(1), reverse=True)[0:self.N]
+        return rec_list
 
 
-# 产生推荐并通过准确率、召回率和覆盖率进行评估
-def evaluate(model):
-    print('Evaluating start ...')
-    # 准确率和召回率
-    hit = 0
-    rec_count = 0
-    test_count = 0
-    # 覆盖率
-    all_rec_movies = set()
 
-    for i, user in enumerate(model.train_data):
-        test_moives = model.test_data.get(user, {})  # 测试集中用户喜欢的电影
-        rec_movies = model.forward(user)  # 得到推荐的电影及计算出的用户对它们的兴趣
-
-        for movie, w in rec_movies:  # 遍历给user推荐的电影
-            if movie in test_moives:  # 测试集中有该电影
-                hit += 1  # 推荐命中+1
-            all_rec_movies.add(movie)
-        rec_count += model.N
-        test_count += len(test_moives)
-
-    precision = hit / (1.0 * rec_count)
-    recall = hit / (1.0 * test_count)
-    coverage = len(all_rec_movies) / (1.0 * model.n_items)
-
-    print('precisioin=%.4f\trecall=%.4f\tcoverage=%.4f' % (precision, recall, coverage))
 
 if __name__ == '__main__':
     model = itemCF("../data/ml-100k/u.data")
-    evaluate(model)
+    ev = evaluate(modelType.topN)
+    ev.evaluateModel(model)
     print('done!')
 
 # precisioin=0.1799	recall=0.1847	coverage=0.1272

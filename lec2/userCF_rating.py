@@ -2,20 +2,29 @@
 # coding:utf-8
 # autohr:wangbin
 import random
-import math
 import pandas as pd
 import numpy as np
 import math
 from operator import itemgetter
-import argparse
+from utils import evaluate
+from utils import modelType
+
 
 np.random.seed(1024)
 
 
 class userCF():
+    # 参数:
+    # K：近邻数目
+    # test_data：测试数据，二维字典。user->item->评分
+    # train_data：训练数据
+    # n_users：用户数目
+    # n_items：项目数目
+    # average_rating：每个用户的平均评分、字典。用户->平均评分
+    # user_sim：用户之间的相似度。二维字典。u->v->相似度
     def __init__(self, data_file, K=20):
         self.K = K  # 近邻数
-        self.readData(data_file)  # 读取数据
+        self.loadData(data_file)  # 读取数据
         self.initModel()  # 初始化模型
 
     def initModel(self):
@@ -69,7 +78,7 @@ class userCF():
                 else:
                     self.user_sim[u][v] = C1[u][v] / math.sqrt(C2[u][v] * C3[u][v])
 
-    def readData(self, data_file):
+    def loadData(self, data_file):
         data_fields = ['user_id', 'item_id', 'rating', 'timestamp']
         data = pd.read_table(data_file, names=data_fields)
         # 二维字典
@@ -90,7 +99,7 @@ class userCF():
 
         print("Initialize end.The user number is:%d,item number is:%d" % (self.n_users, self.n_items))
 
-    def forward(self, user, item):
+    def predict(self, user, item):
         rui = self.average_rating[user]
         # 分子和分母
         C1 = 0
@@ -108,27 +117,9 @@ class userCF():
         return rui
 
 
-# 产生推荐并通过准确率、召回率和覆盖率进行评估
-def evaluate(model):
-    print('Evaluating start ...')
-    count = 0
-    sum_rui = 0
-
-    for user in model.test_data:
-        for movie in model.test_data[user]:
-            rui = model.forward(user, movie)  # 预测的评分
-            if rui == 0:  # 说明用户u的邻域都没有对i评分过
-                continue
-            count += 1
-            sum_rui += math.fabs(model.test_data[user][movie] - rui)
-
-    print("平均绝对值误差=", sum_rui / count)
-    print("count=", count)
-
-
-
 if __name__ == '__main__':
     model = userCF("../data/ml-100k/u.data")
-    evaluate(model)
+    ev = evaluate(modelType.rating)
+    ev.evaluateModel(model)
     print('done!')
 # 平均绝对值误差= 0.9615194990982957

@@ -3,22 +3,28 @@
 # autohr:wangbin
 
 import random
-import math
 import pandas as pd
 import numpy as np
 import math
-import torch
-import torch.nn as nn
 
 from operator import itemgetter
-
+from utils import evaluate
+from utils import modelType
 np.random.seed(1024)
 
 
 class itemCF():
+    # 参数:
+    # K：近邻数目
+    # test_data：测试数据，二维字典。user->item->评分
+    # train_data：训练数据
+    # n_users：用户数目
+    # n_items：项目数目
+    # average_rating：每个项目的平均评分、字典。项目->平均评分
+    # item_sim：项目之间的相似度。二维字典。i->j->相似度
     def __init__(self, data_file, K=20):
         self.K = K  # 近邻数
-        self.readData(data_file)  # 读取数据
+        self.loadData(data_file)  # 读取数据
         self.initModel()  # 初始化模型
 
     def initModel(self):
@@ -54,7 +60,7 @@ class itemCF():
                     C3[i].setdefault(j, 0)
 
                     C1[i][j] += ((self.train_data[user][i] - self.average_rating[i]) * (
-                                self.train_data[user][j] - self.average_rating[j]))
+                            self.train_data[user][j] - self.average_rating[j]))
                     C2[i][j] += ((self.train_data[user][i] - self.average_rating[i]) * (
                             self.train_data[user][i] - self.average_rating[i]))
                     C3[i][j] += ((self.train_data[user][j] - self.average_rating[j]) * (
@@ -70,7 +76,7 @@ class itemCF():
                 else:
                     self.item_sim[i][j] = C1[i][j] / math.sqrt(C2[i][j] * C3[i][j])
 
-    def readData(self, data_file):
+    def loadData(self, data_file):
         data_fields = ['user_id', 'item_id', 'rating', 'timestamp']
         data = pd.read_table(data_file, names=data_fields)
 
@@ -91,44 +97,27 @@ class itemCF():
 
         print("Initialize end.The user number is:%d,item number is:%d" % (self.n_users, self.n_items))
 
-    def forward(self, user, item):
+    def predict(self, user, item):
         rui = 0
         # 分子和分母
         C1 = 0
         C2 = 0
+        if not item in self.item_sim:
+            return rui
         for similar_item, similarity_factor in sorted(self.item_sim[item].items(),
                                                       key=itemgetter(1), reverse=True)[:self.K]:
             if similar_item not in self.train_data[user]:
                 continue
-            C1+=similarity_factor*self.train_data[user][similar_item]
+            C1 += similarity_factor * self.train_data[user][similar_item]
             C2 += math.fabs(similarity_factor)
-        if not C1==0:
-            rui=(C1/C2)
+        if not C1 == 0:
+            rui = (C1 / C2)
         return rui
-
-
-def evaluate(model):
-    print('Evaluating start ...')
-    count = 0
-    sum_rui = 0
-
-    for user in model.test_data:
-        for movie in model.test_data[user]:
-            if movie in model.item_sim:
-                rui = model.forward(user, movie)  # 预测的评分
-                if rui==0 :   #说明用户u评分过的物品中没有i的邻域
-                    continue
-                count += 1
-                sum_rui += math.fabs(model.test_data[user][movie] - rui)
-
-    print("count=",count)
-
-    print("平均绝对值误差=", sum_rui / count)
-
 
 
 if __name__ == '__main__':
     model = itemCF("../data/ml-100k/u.data")
-    evaluate(model)
+    ev=evaluate(modelType.rating)
+    ev.evaluateModel(model)
     print('done!')
 # 平均绝对值误差= 1.169491008089159
