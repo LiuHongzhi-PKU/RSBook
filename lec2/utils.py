@@ -5,6 +5,20 @@
 from enum import Enum
 import math
 
+import random
+import math
+import pandas as pd
+import numpy as np
+import math
+import torch
+import torch.nn as nn
+import torch.utils.data as data
+from tqdm import tqdm
+np.random.seed(1024)
+from operator import itemgetter
+
+
+
 # 枚举类  模型评估时选择使用哪种方式
 class modelType(Enum):
     topN=1
@@ -63,8 +77,115 @@ class evaluate():
 
 
 
+# 输入u,i,r的df三元组，构建user_item的dict，取样时随机调用index
+class Interactions(data.Dataset):
+    """
+    Hold data in the form of an interactions matrix.
+    Typical use-case is like a ratings matrix:
+    - Users are the rows
+    - Items are the columns
+    - Elements of the matrix are the ratings given by a user for an item.
+    """
+
+    def __init__(self, df):
+        df.index=range(len(df)) # 重设index
+        self.df=df
+        self.user_item = {}
+        for (user, item, record, timestamp) in df.itertuples(index=False):
+            self.user_item.setdefault(user,{})
+            self.user_item[user][item] = record
+
+    def __getitem__(self, index):
+        user = int(self.df.loc[index]['user_id'])
+        item = int(self.df.loc[index]['item_id'])
+        rating = float(self.df.loc[index]['rating'])
+        return (user,item), rating
+
+    def __len__(self):
+        return len(self.df)
 
 
+class PairwiseInteractions(data.Dataset):
+    """
+    Sample data from an interactions matrix in a pairwise fashion. The row is
+    treated as the main dimension, and the columns are sampled pairwise.
+    """
+
+    def __init__(self, df, n_items):
+        df.index = range(len(df)) # 重设index
+        self.df = df
+        self.n_items = n_items
+
+        self.user_item = {}
+        for (user, item, record, timestamp) in df.itertuples(index=False):
+            self.user_item.setdefault(user, {})
+            self.user_item[user][item] = record
+
+    def __getitem__(self, index):
+        user = int(self.df.loc[index]['user_id'])
+        found = False
+
+        while not found:
+            neg_col = np.random.randint(self.n_items)
+            # print(self.user_item.shape,user)
+            if neg_col not in self.user_item[user]:
+                found = True
+            # if neg_col not in self.user_item[user]:
+            #     found = True
+
+        pos_col = int(self.df.loc[index]['item_id'])
+        rating = float(self.df.loc[index]['rating'])
+        return (user, (pos_col, neg_col)), rating
+
+    def __len__(self):
+        return len(self.df)
+
+
+
+class CPLR_Interactions(data.Dataset):
+    """
+    Sample data from an interactions matrix in a pairwise fashion. The row is
+    treated as the main dimension, and the columns are sampled pairwise.
+    """
+
+    def __init__(self, df, n_items, user_sim, K):
+        df.index = range(len(df)) # 重设index
+        self.df = df
+        self.n_items = n_items
+        self.user_sim = user_sim
+        self.K = K
+
+        self.user_item = {}
+        for (user, item, record, timestamp) in df.itertuples(index=False):
+            self.user_item.setdefault(user,{})
+            self.user_item[user][item] = record
+        self.col_usr_item = {}
+        for user in self.user_item:
+            self.col_usr_item.setdefault(user, set())
+            for similar_user, similarity_factor in sorted(self.user_sim[user].items(),
+                                                          key=itemgetter(1), reverse=True)[0:self.K]:
+                self.col_usr_item[user].update(self.user_item[similar_user])
+            self.col_usr_item[user] = self.col_usr_item[user] - set(self.user_item[user])
+
+
+
+    def __getitem__(self, index):
+        user = int(self.df.loc[index]['user_id'])
+        found = False
+
+        col_col = random.sample(self.col_usr_item[user], 1)[0]
+        while not found:
+            lef_col = np.random.randint(self.n_items)
+            # print(self.user_item.shape,user)
+            if lef_col not in self.user_item[user] and lef_col not in self.col_usr_item[user]:
+                found = True
+
+        pos_col = int(self.df.loc[index]['item_id'])
+        rating = float(self.df.loc[index]['rating'])
+        return (user, (pos_col, col_col, lef_col)), rating
+
+    def __len__(self):
+        return len(self.df)
 
 
 
