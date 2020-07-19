@@ -17,9 +17,11 @@ class userCF():
     # n_users：用户数目
     # n_items：项目数目
     # user_sim：用户之间的相似度。二维字典。u->v->相似度
-    def __init__(self, data_file, K=20,N=10):
+    # similarityMeasure：相似度度量，cosine或jaccard
+    def __init__(self, data_file, K=20,N=10,similarityMeasure="jaccard"):
         self.K = K  # 近邻数
         self.N = N  # 物品推荐数
+        self.similarityMeasure = similarityMeasure
         self.loadData(data_file)    # 读取数据
         self.initModel()            # 初始化模型
 
@@ -33,8 +35,9 @@ class userCF():
                     item_users[i] = set()
                 item_users[i].add(u)
 
-        # 计算用户之间共同评分的物品数
+        # 计算用户之间共同评分的物品数,C为修正后的，count为修正前的。
         C = dict()
+        count = dict()
         for i, users in item_users.items():
             for u in users:
                 for v in users:
@@ -45,11 +48,20 @@ class userCF():
                     # 对热门物品进行惩罚
                     C[u][v] += math.log(self.n_users/len(users))
                     # 计算最终的用户相似度矩阵
+
+                    count.setdefault(u, {})
+                    count[u].setdefault(v, 0)
+                    count[u][v] += 1
         self.user_sim = dict()
         for u, related_users in C.items():
             self.user_sim[u]={}
             for v, cuv in related_users.items():
-                self.user_sim[u][v] = cuv / math.sqrt(len(self.train_data[u]) * len(self.train_data[v]))
+                if self.similarityMeasure == "cossine":
+                    self.user_sim[u][v] = cuv / math.sqrt(len(self.train_data[u]) * len(self.train_data[v]))
+                else:
+                    self.user_sim[u][v] = count[u][v] / (len(self.train_data[u])+len(self.train_data[v])-count[u][v])
+
+
 
     def loadData(self, data_file):
         data_fields = ['user_id', 'item_id', 'rating', 'timestamp']
@@ -100,4 +112,5 @@ if __name__ == '__main__':
     ev.evaluateModel(model)
     print('done!')
 
-# precisioin=0.1790	recall=0.1868	coverage=0.2628
+# 余弦相似度precisioin=0.1790	recall=0.1868	coverage=0.2628
+# 杰卡德相似度：precisioin=0.1842	recall=0.1923	coverage=0.2348

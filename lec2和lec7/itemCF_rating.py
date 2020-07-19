@@ -22,8 +22,10 @@ class itemCF():
     # n_items：项目数目
     # average_rating：每个项目的平均评分、字典。项目->平均评分
     # item_sim：项目之间的相似度。二维字典。i->j->相似度
-    def __init__(self, data_file, K=20):
+    # similarityMeasure：相似度度量，cosine或pearson
+    def __init__(self, data_file, K=20,similarityMeasure="cosine"):
         self.K = K  # 近邻数
+        self.similarityMeasure=similarityMeasure
         self.loadData(data_file)  # 读取数据
         self.initModel()  # 初始化模型
 
@@ -43,6 +45,13 @@ class itemCF():
                 self.average_rating.setdefault(i, 0)
                 self.average_rating[i] += self.train_data[user][i] / item_cnt[i]
 
+        # 计算用户的平均评分
+        self.user_average_rating={}
+        for user, items in self.train_data.items():
+            self.user_average_rating.setdefault(user, 0)
+            for i in items:
+                self.user_average_rating[user] += self.train_data[user][i] / len(self.train_data[user])
+
         # 相似度的分子部分
         C2 = dict()
         C3 = dict()
@@ -59,12 +68,20 @@ class itemCF():
                     C3.setdefault(i, {})
                     C3[i].setdefault(j, 0)
 
-                    C1[i][j] += ((self.train_data[user][i] - self.average_rating[i]) * (
-                            self.train_data[user][j] - self.average_rating[j]))
-                    C2[i][j] += ((self.train_data[user][i] - self.average_rating[i]) * (
-                            self.train_data[user][i] - self.average_rating[i]))
-                    C3[i][j] += ((self.train_data[user][j] - self.average_rating[j]) * (
-                            self.train_data[user][j] - self.average_rating[j]))
+                    if self.similarityMeasure=="cosine":
+                        C1[i][j] += ((self.train_data[user][i] - self.user_average_rating[user]) * (
+                                self.train_data[user][j] - self.user_average_rating[user]))
+                        C2[i][j] += ((self.train_data[user][i] - self.user_average_rating[user]) * (
+                                self.train_data[user][i] - self.user_average_rating[user]))
+                        C3[i][j] += ((self.train_data[user][j] - self.user_average_rating[user]) * (
+                                self.train_data[user][j] - self.user_average_rating[user]))
+                    else:
+                        C1[i][j] += ((self.train_data[user][i] - self.average_rating[i]) * (
+                                self.train_data[user][j] - self.average_rating[j]))
+                        C2[i][j] += ((self.train_data[user][i] - self.average_rating[i]) * (
+                                self.train_data[user][i] - self.average_rating[i]))
+                        C3[i][j] += ((self.train_data[user][j] - self.average_rating[j]) * (
+                                self.train_data[user][j] - self.average_rating[j]))
 
         # 计算最终的物品相似度矩阵
         self.item_sim = dict()
@@ -120,4 +137,5 @@ if __name__ == '__main__':
     ev=evaluate(modelType.rating)
     ev.evaluateModel(model)
     print('done!')
-# 平均绝对值误差= 1.169491008089159
+# 皮尔逊相似度：平均绝对值误差= 1.169491008089159
+# 余弦相似度：平均绝对值误差= 1.1192802133322162

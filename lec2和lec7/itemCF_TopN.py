@@ -9,6 +9,7 @@ from operator import itemgetter
 
 np.random.seed(1024)
 
+
 class itemCF():
     # 参数:
     # K：近邻数目
@@ -18,11 +19,14 @@ class itemCF():
     # n_users：用户数目
     # n_items：项目数目
     # item_sim：项目之间的相似度。二维字典。i->j->相似度
-    def __init__(self, data_file, K=20,N=10):
+    # similarityMeasure：相似度度量，cosine或conditional
+    def __init__(self, data_file, K=20,N=10,similarityMeasure="conditional"):
         self.K = K  # 近邻数
         self.N = N  # 物品推荐数
+        self.similarityMeasure = similarityMeasure
         self.loadData(data_file)    # 读取数据
         self.initModel()            # 初始化模型
+
 
     def initModel(self):
         # 计算每个物品被用户评分的个数
@@ -33,8 +37,9 @@ class itemCF():
                 item_cnt.setdefault(i,0)
                 item_cnt[i] += 1
 
-        # 计算物品之间共同评分的物品数
+        # 计算物品之间共同评分的物品数,C为修正后的，count为修正前的。
         C = dict()
+        count=dict()
         for user, items in self.train_data.items():
             for u in items:
                 for v in items:
@@ -43,12 +48,19 @@ class itemCF():
                     C.setdefault(u,{})
                     C[u].setdefault(v,0)
                     C[u][v] += math.log(self.n_items/len(items))
+
+                    count.setdefault(u, {})
+                    count[u].setdefault(v, 0)
+                    count[u][v] += 1
         # 计算最终的物品相似度矩阵
         self.item_sim = dict()
         for u, related_items in C.items():
             self.item_sim[u]={}
             for v, cuv in related_items.items():
-                self.item_sim[u][v] = cuv / math.sqrt(item_cnt[u] * item_cnt[v])
+                if self.similarityMeasure=="cossine":
+                    self.item_sim[u][v] = cuv / math.sqrt(item_cnt[u] * item_cnt[v])
+                else:
+                    self.item_sim[u][v] = count[u][v] / (item_cnt[u])
 
     def loadData(self, data_file):
         data_fields = ['user_id', 'item_id', 'rating', 'timestamp']
@@ -102,4 +114,5 @@ if __name__ == '__main__':
     ev.evaluateModel(model)
     print('done!')
 
-# precisioin=0.1799	recall=0.1847	coverage=0.1272
+#余弦相似度 precisioin=0.1799	recall=0.1847	coverage=0.1272
+# 条件概率 precisioin=0.1431	recall=0.1474	coverage=0.0636

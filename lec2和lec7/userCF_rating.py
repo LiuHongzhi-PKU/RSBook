@@ -22,8 +22,10 @@ class userCF():
     # n_items：项目数目
     # average_rating：每个用户的平均评分、字典。用户->平均评分
     # user_sim：用户之间的相似度。二维字典。u->v->相似度
-    def __init__(self, data_file, K=20):
+    # similarityMeasure：相似度度量，cosine或pearson
+    def __init__(self, data_file, K=20,similarityMeasure="cosine"):
         self.K = K  # 近邻数
+        self.similarityMeasure = similarityMeasure
         self.loadData(data_file)  # 读取数据
         self.initModel()  # 初始化模型
 
@@ -60,12 +62,20 @@ class userCF():
                     C3.setdefault(u, {})
                     C3[u].setdefault(v, 0)
 
-                    C1[u][v] += ((self.train_data[u][i] - self.average_rating[u]) * (
-                            self.train_data[v][i] - self.average_rating[v]))
-                    C2[u][v] += ((self.train_data[u][i] - self.average_rating[u]) * (
-                            self.train_data[u][i] - self.average_rating[u]))
-                    C3[u][v] += ((self.train_data[v][i] - self.average_rating[v]) * (
-                            self.train_data[v][i] - self.average_rating[v]))
+                    if self.similarityMeasure == "cosine":
+                        C1[u][v] += ((self.train_data[u][i]) * (
+                                self.train_data[v][i] ))
+                        C2[u][v] += ((self.train_data[u][i]) * (
+                                self.train_data[u][i] ))
+                        C3[u][v] += ((self.train_data[v][i] ) * (
+                                self.train_data[v][i] ))
+                    else:
+                        C1[u][v] += ((self.train_data[u][i] - self.average_rating[u]) * (
+                                self.train_data[v][i] - self.average_rating[v]))
+                        C2[u][v] += ((self.train_data[u][i] - self.average_rating[u]) * (
+                                self.train_data[u][i] - self.average_rating[u]))
+                        C3[u][v] += ((self.train_data[v][i] - self.average_rating[v]) * (
+                                self.train_data[v][i] - self.average_rating[v]))
 
         # 计算最终的用户相似度矩阵
         self.user_sim = dict()
@@ -122,4 +132,5 @@ if __name__ == '__main__':
     ev = evaluate(modelType.rating)
     ev.evaluateModel(model)
     print('done!')
-# 平均绝对值误差= 0.9615194990982957
+# 皮尔逊相似度  平均绝对值误差= 0.9615194990982957
+# 余弦相似度   平均绝对值误差= 0.9795184841124885

@@ -369,6 +369,6 @@ class CPLR(torch.nn.Module):
         return
 
 if __name__ == '__main__':
-    input_size, loader=getDataLoader("../data/ml-100k/u.data")
+    input_size, loader=getDataLoader("data/ml-100k/u.data")
     model = CPLR(input_size[0],input_size[1], input_size[2])
     model.fit(loader,10)

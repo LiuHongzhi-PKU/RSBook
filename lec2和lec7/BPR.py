@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 import torch.utils.data as data
 from tqdm import tqdm
-from utils import Interactions,CPLR_Interactions
+from utils import Interactions,PairwiseInteractions
 import os
 from sklearn import preprocessing
 from sklearn.metrics import roc_auc_score
@@ -31,62 +31,33 @@ def seed_everything(seed=1234):
 seed_everything()
 
 
-def cplr_loss(diff):
+def bpr_loss(diff):
     sig = nn.Sigmoid()
     return -torch.log(sig(diff)).sum()
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
-def getUsrSim(train_data):
-    # 建立item_user倒排表
-    item_users = dict()
-    for u, items in train_data.items():
-        for i in items:
-            if i not in item_users:
-                item_users[i] = set()
-            item_users[i].add(u)
 
-    # 计算用户之间共同评分的物品数
-    C = dict()
-    for i, users in item_users.items():
-        for u in users:
-            for v in users:
-                if u == v:
-                    continue
-                C.setdefault(u,{})
-                C[u].setdefault(v,0)
-                C[u][v] += 1
-    # 计算最终的用户相似度矩阵
-    user_sim = dict()
-    for u, related_users in C.items():
-        user_sim[u]={}
-        for v, cuv in related_users.items():
-            user_sim[u][v] = cuv / math.sqrt(len(train_data[u]) * len(train_data[v]))
-    return user_sim
-
-# 计算领域支持系数，用于训练时计算置信系数
-def getSupport(user_sim, user_item, K=10):
-    support = {}
-    for user in user_item:
-        support.setdefault(user, defaultdict(int))
-        for similar_user, similarity_factor in sorted(user_sim[user].items(),
-                                                      key=itemgetter(1), reverse=True)[0:K]:
-            for item in user_item[similar_user]:
-                support[user][item] += similarity_factor
-    return support
-
-
-class CPLR(torch.nn.Module):
-    def __init__(self, data_file, n_factors=20, alpha=1, beta=1, gama=1, lr=0.1, weight_decay=0.005,
+class BPR(torch.nn.Module):
+    # 类变量：
+    # n_users:用户数目
+    # n_items：物品数目
+    # device:设备
+    # item_bias：物品偏置
+    # item_embeddings：物品向量
+    # loader：加载的数据
+    # n_factors：隐空间维度
+    # optimizer：优化器
+    # topn：物品推荐数目
+    # user_bias：用户偏置
+    # user_embeddings：用户向量
+    def __init__(self, data_file, n_factors=20, lr=0.1, weight_decay=0.005,
                  device=torch.device("cpu"),
                  sparse=False, topn=10):
-        super(CPLR, self).__init__()
+        super(BPR, self).__init__()
 
         self.loadData(data_file)  # 读取数据
 
-        self.alpha = alpha
-        self.beta = beta
-        self.gama = gama
         self.n_factors = n_factors
         self.topn = topn  # 推荐物品的topn
         self.device = device
@@ -101,7 +72,7 @@ class CPLR(torch.nn.Module):
                                           lr=lr, weight_decay=weight_decay)
         self = self.to(self.device)
 
-    def loadData(self, data_path, batch_size=2048,K=10):
+    def loadData(self, data_path, batch_size=2048):
         # load train data
         data_fields = ['user_id', 'item_id', 'rating', 'timestamp']
         # all data file
@@ -112,11 +83,7 @@ class CPLR(torch.nn.Module):
         data_df['user_id'] = le.transform(data_df['user_id'])
         le.fit(data_df['item_id'])
         data_df['item_id'] = le.transform(data_df['item_id'])
-        #     data_df['user_id']-=1
-        #     data_df['item_id'] -= 1
-        #
 
-        # get user number
         self.n_users = max(data_df['user_id'].values) + 1
         # get item number
         self.n_items = max(data_df['item_id'].values) + 1
@@ -125,25 +92,23 @@ class CPLR(torch.nn.Module):
         df = {}
         df['train'] = data_df.sample(n=int(len(data_df) * 0.8), replace=False)
         df['valid'] = data_df.drop(df['train'].index, axis=0)
-        self.support = {}
         self.loader = {}
         for phase in ['train', 'valid']:
             user_item = {}
             for (user, item, record, timestamp) in df[phase].itertuples(index=False):
                 user_item.setdefault(user, {})
                 user_item[user][item] = record
-            user_sim = getUsrSim(user_item)
-            self.support[phase] = getSupport(user_sim, user_item, K)
+
 
             self.loader[phase] = data.DataLoader(
-                CPLR_Interactions(df[phase], self.n_items, user_sim, K), batch_size=batch_size, shuffle=(phase == 'train'))
+                PairwiseInteractions(df[phase], self.n_items), batch_size=batch_size, shuffle=(phase == 'train'))
 
         print("Initialize end.The user number is:%d,item number is:%d" % (self.n_users, self.n_items))
 
         self.loader['valid_simple'] = data.DataLoader(
             Interactions(df['valid']), batch_size=batch_size, shuffle=False)
 
-    # 预测评分结果
+    # 预测结果
     def predict(self, users, items):
         ues = self.user_embeddings(users)  # B,F
         uis = self.item_embeddings(items)  # B,F
@@ -180,25 +145,9 @@ class CPLR(torch.nn.Module):
 
                     users = users.long()
                     items = tuple(c.long() for c in items)
-                    c_uit,c_utj,c_uij=[],[],[]
-                    for id in range(users.size(0)):
-                        u=users[id]
-                        i,t,j=items[0][id],items[1][id],items[2][id]
-                        c_uit += [(1 + self.support[phase][int(u)][int(i)]) / (1 + self.support[phase][int(u)][int(t)])]
-                        c_utj += [1 + self.support[phase][int(u)][int(t)]]
-                        c_uij += [1 + self.support[phase][int(u)][int(i)]]
+                    preds = self.forward(users, items)
+                    loss = bpr_loss(preds)
 
-                    c_uit=torch.Tensor(c_uit).float()
-                    c_utj = torch.Tensor(c_utj).float()
-                    c_uij = torch.Tensor(c_uij).float()
-
-                    r_uit = c_uit*self.forward(users,(items[0],items[1]))
-                    r_utj = c_utj*self.forward(users, (items[1], items[2]))
-                    r_uij = c_uij*self.forward(users, (items[0], items[2]))
-                    loss = -self.alpha * torch.log(torch.sigmoid(r_uit)+EPS) + \
-                        -self.beta * torch.log(torch.sigmoid(r_utj)+EPS) + \
-                        -self.gama * torch.log(torch.sigmoid(r_uij)+EPS)
-                    loss=loss.sum()
                     losses[phase] += loss.item()
                     batch_loss = loss.item() / users.size()[0]
                     pbar.set_postfix(loss=batch_loss)
@@ -244,7 +193,7 @@ class CPLR(torch.nn.Module):
                     scores=self.predict(users,items)
                     if u in train_ui:
                         seen_items = np.array(list(train_ui[u].keys()))
-
+                        # 给看过的物品一个低分，即不会被推荐
                         scores[seen_items]=-1e9
                     else:continue
 
@@ -269,6 +218,6 @@ class CPLR(torch.nn.Module):
         return
 
 if __name__ == '__main__':
-    model = CPLR("../data/ml-100k/u.data")
+    model = BPR("../data/ml-100k/u.data")
     model.fit(10)
-# precisioin=0.2898	recall=0.1363	coverage=0.3591
+# precisioin=0.2244	recall=0.1056	coverage=0.4067
