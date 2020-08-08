@@ -105,6 +105,40 @@ class Interactions(data.Dataset):
         return len(self.df)
 
 
+
+
+# 输入u,i,r的df三元组，构建user_item的dict，取样时随机调用index
+class PPushCRInteractions(data.Dataset):
+    """
+    Hold data in the form of an interactions matrix.
+    Typical use-case is like a ratings matrix:
+    - Users are the rows
+    - Items are the columns
+    - Elements of the matrix are the ratings given by a user for an item.
+    """
+
+    def __init__(self, df):
+        df.index=range(len(df)) # 重设index
+        self.df=df
+        self.user_item = {}
+        for (user, item, record, timestamp) in df.itertuples(index=False):
+            self.user_item.setdefault(user,{})
+            self.user_item[user][item] = record
+    # 得到一个负item
+    def __getitem__(self, index):
+        user = int(self.df.loc[index]['user_id'])
+        while not found:
+            item = np.random.randint(self.n_items)
+            if item not in self.user_item[user]:
+                found = True
+
+        rating = float(self.df.loc[index]['rating'])
+        return (user,item), rating
+
+    def __len__(self):
+        return len(self.df)
+
+
 class PairwiseInteractions(data.Dataset):
     """
     Sample data from an interactions matrix in a pairwise fashion. The row is
