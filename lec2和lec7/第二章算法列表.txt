@@ -3,4 +3,7 @@
 针对TopN推荐的itemCF
 针对评分预测的itemCF
 slopeOne算法
-二部图：激活扩散模型、物质扩散模型、热传导模型
+二部图：
+激活扩散模型：spreadingActivation.py
+物质扩散模型：spreadingSubstance.py
+热传导模型：thermalConduction.py

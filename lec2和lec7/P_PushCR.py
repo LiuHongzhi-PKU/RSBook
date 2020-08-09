@@ -59,6 +59,7 @@ class PPushCR(torch.nn.Module):
                  sparse=False, topn=10):
         super(PPushCR, self).__init__()
         self.neg_count=neg_count
+        # neg_count指的是负样本采样的数目
         self.p=p
         self.loadData(data_file)  # 读取数据
 
@@ -201,7 +202,7 @@ class PPushCR(torch.nn.Module):
                     neg_items_fina=neg_items * len(pos_items)
                     pos_items_fina=pos_items * len(neg_items)
                     user_fina = [user] * len(pos_items) * len(neg_items)
-                    # 用于取向量
+                    # 以上三个用于取向量，目的是把循环展开
 
                     user_tensor = torch.from_numpy(np.array(user_fina)).long()
                     pos_items_tensor = torch.from_numpy(np.array(pos_items_fina)).long()
@@ -280,6 +281,7 @@ class PPushCR(torch.nn.Module):
                 recall = hit / (1.0 * test_count)
                 coverage = len(all_rec_items) / (1.0 * self.n_items)
 
+            # 这个是用来控制每隔几个epoch打印一次结果，目前是每次都打印
             if ((epoch + 1) % 1) == 0:
                 print(
                     f'epoch {epoch + 1} train loss: {losses["train"]:.3f} valid loss {losses["valid"]:.3f} {score} {epoch_score:.3f}')

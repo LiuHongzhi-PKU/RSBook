@@ -18,7 +18,7 @@ class userCF():
     # n_items：项目数目
     # user_sim：用户之间的相似度。二维字典。u->v->相似度
     # similarityMeasure：相似度度量，cosine或jaccard
-    def __init__(self, data_file, K=20,N=10,similarityMeasure="jaccard"):
+    def __init__(self, data_file, K=20,N=10,similarityMeasure="cosine"):
         self.K = K  # 近邻数
         self.N = N  # 物品推荐数
         self.similarityMeasure = similarityMeasure
@@ -56,7 +56,7 @@ class userCF():
         for u, related_users in C.items():
             self.user_sim[u]={}
             for v, cuv in related_users.items():
-                if self.similarityMeasure == "cossine":
+                if self.similarityMeasure == "cosine":
                     self.user_sim[u][v] = cuv / math.sqrt(len(self.train_data[u]) * len(self.train_data[v]))
                 else:
                     self.user_sim[u][v] = count[u][v] / (len(self.train_data[u])+len(self.train_data[v])-count[u][v])
@@ -112,5 +112,5 @@ if __name__ == '__main__':
     ev.evaluateModel(model)
     print('done!')
 
-# 余弦相似度precisioin=0.1790	recall=0.1868	coverage=0.2628
-# 杰卡德相似度：precisioin=0.1842	recall=0.1923	coverage=0.2348
+# 余弦相似度precisioin=0.1862	recall=0.1862	coverage=0.2598
+# 杰卡德相似度：precisioin=0.1881	recall=0.1921	coverage=0.2331

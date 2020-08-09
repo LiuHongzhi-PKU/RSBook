@@ -60,6 +60,8 @@ class evaluate():
 
         for i, user in enumerate(model.train_data):
             test_moives = model.test_data.get(user, {})  # 测试集中用户喜欢的电影
+            if len(test_moives) == 0:
+                continue
             rec_movies = model.predict(user)  # 得到推荐的电影及计算出的用户对它们的兴趣
 
             for movie in rec_movies:  # 遍历给user推荐的电影
