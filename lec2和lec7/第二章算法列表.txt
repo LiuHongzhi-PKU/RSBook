@@ -1,8 +1,8 @@
-针对TopN推荐的userCF
-针对评分预测的userCF
-针对TopN推荐的itemCF
-针对评分预测的itemCF
-slopeOne算法
+针对TopN推荐的userCF：userCF_TopN.py
+针对评分预测的userCF：userCF_rating.py
+针对TopN推荐的itemCF：itemCF_TopN.py
+针对评分预测的itemCF：itemCF_rating.py
+slopeOne算法：SlopeOne.py
 二部图：
 激活扩散模型：spreadingActivation.py
 物质扩散模型：spreadingSubstance.py

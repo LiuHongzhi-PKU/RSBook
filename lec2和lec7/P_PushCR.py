@@ -199,8 +199,13 @@ class PPushCR(torch.nn.Module):
                     # user_fina = [user] * len(neg_items)
                     # neg_items_fina = neg_items
 
-                    neg_items_fina=neg_items * len(pos_items)
+                    neg_items_fina = []
                     pos_items_fina=pos_items * len(neg_items)
+                    len1 = len(pos_items)
+                    for i in neg_items:
+                        neg_items_fina += ([i] * len1)
+
+
                     user_fina = [user] * len(pos_items) * len(neg_items)
                     # 以上三个用于取向量，目的是把循环展开
 
@@ -216,9 +221,9 @@ class PPushCR(torch.nn.Module):
 
                     thisLoss = torch.log(1 + torch.exp(-(preds)))
                     # thisLoss = -preds
-                    # print("this1===",thisLoss)
+                    print("this0===",thisLoss.shape)
                     thisLoss = thisLoss.sum()
-                    # print("this1===", thisLoss)
+                    print("this1===", thisLoss)
                     loss = torch.pow(thisLoss, self.p) / len(pos_items)
 
                     losses[phase] += loss.item()
@@ -294,3 +299,4 @@ if __name__ == '__main__':
     model = PPushCR("../data/ml-100k/u.data")
     model.fit(10)
 # precisioin=0.2572	recall=0.1210	coverage=0.0880
+# precisioin=0.2844	recall=0.1338	coverage=0.1219

@@ -1,8 +1,8 @@
-最近最热门推荐算法
-基于时间的项目协同过滤
-基于时间的用户协同过滤
-基于会话的推荐
-基于统一转移矩阵的序列预测
-基于个性化转移矩阵的序列预测
-基于循环神经网络的序列预测（RNN、LSTM、GRU）
-基于空间信息的推荐
+最近最热门推荐算法（recentPopular）
+基于时间的项目协同过滤（itemCF_TopN_Time)
+基于时间的用户协同过滤（userCF_TopN_Time)
+基于会话的推荐（itemCF_session/sessionSpreading)
+基于统一转移矩阵的序列预测(Markov)
+基于个性化转移矩阵的序列预测(FPMC)
+基于循环神经网络的序列预测（RNN）
+基于空间信息的推荐（LBSpre.py  LBSmodel.py  LBSpost.py）
