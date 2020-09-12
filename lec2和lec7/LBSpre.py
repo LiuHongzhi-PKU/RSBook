@@ -264,7 +264,7 @@ if __name__ == '__main__':
     print('done!')
 
 # 前五百个用户 五百个物品
-# 50000
+# 距离 50000
 # precisioin=0.0082	recall=0.0431	coverage=0.8095
 
 # 10000
@@ -273,7 +273,3 @@ if __name__ == '__main__':
 # 5000
 # precisioin=0.0066	recall=0.0345	coverage=0.6929
 
-
-# 一千
-# 10000
-# precisioin=0.0075	recall=0.0332	coverage=0.8316

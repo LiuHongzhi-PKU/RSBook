@@ -34,7 +34,7 @@ class GRU(nn.Module):
         self.embedding_dim = opt.hiddenSize
         self.emb = nn.Embedding(self.n_items, self.embedding_dim, padding_idx=0)
         self.emb_dropout = nn.Dropout(0.25)
-        self.gru = nn.RNN(self.embedding_dim, self.hidden_size, batch_first=True)
+        self.gru = nn.GRU(self.embedding_dim, self.hidden_size, batch_first=True)
         self.dense = nn.Linear(self.hidden_size, self.n_items, bias=False)
         self.loss_function = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(self.parameters(), lr=opt.lr, weight_decay=opt.l2)

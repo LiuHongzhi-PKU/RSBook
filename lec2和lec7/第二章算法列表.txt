@@ -1,9 +1,43 @@
-针对TopN推荐的userCF：userCF_TopN.py
-针对评分预测的userCF：userCF_rating.py
-针对TopN推荐的itemCF：itemCF_TopN.py
-针对评分预测的itemCF：itemCF_rating.py
-slopeOne算法：SlopeOne.py
-二部图：
-激活扩散模型：spreadingActivation.py
-物质扩散模型：spreadingSubstance.py
-热传导模型：thermalConduction.py
+第二章全部算法使用的数据集均为movie-lens 100k
+
+针对TopN推荐的userCF
+文件：userCF_TopN.py
+# 余弦相似度 precisioin=0.1862	recall=0.1862	coverage=0.2598
+# 杰卡德相似度：precisioin=0.1881	recall=0.1921	coverage=0.2331
+
+针对评分预测的userCF
+文件：userCF_rating.py
+# 皮尔逊相似度  平均绝对值误差= 0.9615194990982957
+# 余弦相似度   平均绝对值误差= 0.9795184841124885
+
+
+针对TopN推荐的itemCF
+文件：itemCF_TopN.py
+#余弦相似度 precisioin=0.1779	recall=0.1796	coverage=0.1272
+# 条件概率 precisioin=0.1466	recall=0.1483	coverage=0.0642
+
+
+针对评分预测的itemCF
+文件：itemCF_rating.py
+# 皮尔逊相似度：平均绝对值误差= 1.169491008089159
+# 余弦相似度：平均绝对值误差= 1.1192802133322162
+
+
+slopeOne算法
+文件：SlopeOne.py
+# 平均绝对值误差= 0.739291913465804
+
+
+
+激活扩散模型
+文件：spreadingActivation.py
+# precisioin=0.1027	recall=0.1071	coverage=0.0434
+
+物质扩散模型
+文件：spreadingSubstance.py
+# precisioin=0.1244	recall=0.1283	coverage=0.0488
+
+
+热传导模型
+文件：thermalConduction.py
+# precisioin=0.0042	recall=0.0044	coverage=0.2122

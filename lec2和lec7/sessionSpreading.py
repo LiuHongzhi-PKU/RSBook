@@ -10,7 +10,7 @@ from utils import evaluate
 from utils import modelType
 
 from operator import itemgetter
-
+from sklearn.utils import shuffle
 import random
 from collections import defaultdict
 
@@ -35,28 +35,15 @@ class  sessionSpreading():
     # user_basket :用户到session的映射
     # basket_item:session到item的映射
     # weightS weightU :用户和session的扩散权重
-    def __init__(self, data_file,step=5,N=10,weightU=0,weightS=1):
+    def __init__(self, data_file,step=5,N=10,weightU=1,weightS=1):
         self.step = step
         self.N = N  # 物品推荐数
         self.weightU = weightU  # 物品扩散给用户的权重
         self.weightS = weightS  # 物品扩散给session的权重
 
         self.loadData(data_file)  # 读取数据
-        # self.loadData2(transPath="../data/trans.txt", usersPath="../data/users.txt", itemsPath="../data/items.txt")
         self.initModel()
         self.evaluate()
-
-
-    def loadUI(self,fname, delimiter=','):
-        idx_set = set()
-        with open(fname, 'r') as f:
-            # dicard header
-            f.readline()
-
-            for l in csv.reader(f, delimiter=delimiter, quotechar='"'):
-                idx = int(l[0])
-                idx_set.add(idx)
-        return idx_set
 
     def loadData(self, data_path="../data/ml-100k/u.data"):
         print("开始读数据")
@@ -164,88 +151,6 @@ class  sessionSpreading():
         self.basket_item = basket_item
         print("basket_item:", self.basket_item)
 
-    def loadData2(self, transPath, usersPath, itemsPath):
-        user_set = self.loadUI(usersPath)
-        item_set = self.loadUI(itemsPath)
-
-        user_basket = {}
-        basket = {}
-        last_user = -1
-        with open(transPath, 'r') as f:
-            for l in f:
-                l = [int(s) for s in l.strip().split()]
-                user = l[0]
-                b_tm1 = list(set(l[1:]))
-                if last_user == -1 or user != last_user:
-                    last_user = user
-                    basket = {}
-
-                basket[len(basket)] = b_tm1
-                user_basket[user] = basket
-        self.n_users = max(user_set) + 1
-        self.n_items = max(item_set) + 1
-        for i in range(10):
-            print(user_basket[i])
-        print(user_basket.keys())
-
-        user_basket_test = defaultdict(list)
-
-        print("去掉长度<3的session,去掉session数目<4的用户，然后每个用户拿1个session作为测试集")
-        for i in range(self.n_users):
-            # print(i)
-            for key in list(user_basket[i].keys()):
-                if len(user_basket[i][key]) < 3:
-                    user_basket[i].pop(key)
-            count = 0
-            for key in list(user_basket[i].keys()):
-                user_basket[i][count] = user_basket[i].pop(key)
-                count += 1
-        for i in range(self.n_users):
-            length = len(list(user_basket[i].keys()))
-            if length < 4:
-                user_basket.pop(i)
-
-        for i in list(user_basket.keys()):
-            length = len(list(user_basket[i].keys()))
-            if length <= 2:
-                continue
-            # user_basket_test[i].append(user_basket[i].pop(length - 2))
-            user_basket_test[i].append(user_basket[i].pop(length - 1))
-
-        # for i in list(user_basket_test.keys()):
-        #     print(user_basket_test[i])
-        #
-        # for i in list(user_basket.keys()):
-        #     print(user_basket[i])
-
-        self.user_basket_test = user_basket_test
-        self.user_basket = user_basket
-
-        user_item_test = {}
-        for user in self.user_basket_test:
-            user_item_test.setdefault(user,{})
-            for item in self.user_basket_test[user][0]:
-                user_item_test[user][item]=1
-        self.user_item_test=user_item_test
-        print("user_item_test:",self.user_item_test)
-
-        user_item = {}
-        for user in self.user_basket:
-            user_item.setdefault(user,{})
-            for basket in self.user_basket[user]:
-                for item in user_basket[user][basket]:
-                    user_item[user][item]=1
-        self.user_item = user_item
-        print("user_item:", self.user_item)
-
-        basket_item=[]
-        for user in self.user_basket:
-            for basket in self.user_basket[user]:
-                    basket_item.append(user_basket[user][basket])
-        self.basket_item = basket_item
-        print("basket_item:", self.basket_item)
-
-
 
     def initModel(self):
         # 建立item_user倒排表
@@ -345,9 +250,9 @@ class  sessionSpreading():
             # print(target_items)
 
             rec_list = self.predict(u)
-            print("开始给",u)
-            print(target_items)
-            print(rec_list)
+            # print("开始给",u)
+            # print(target_items)
+            # print(rec_list)
 
 
             for item in rec_list:  # 遍历给user推荐的物品
@@ -360,6 +265,9 @@ class  sessionSpreading():
         recall = hit / (1.0 * test_count)
         coverage = len(all_rec_items) / (1.0 * self.n_items)
         print('precisioin=%.8f\trecall=%.8f\tcoverage=%.8f' % (precision, recall, coverage))
+        print(rec_count)
+        print(test_count)
+        print(hit)
 
 
 if __name__ == '__main__':
@@ -367,17 +275,7 @@ if __name__ == '__main__':
 
 
 
-
-# 不考虑session
-# precisioin=0.0149	recall=0.0316	coverage=0.0273
-
-# 考虑session
-# precisioin=0.0144	recall=0.0305	coverage=0.0237
-
-
-# ml-100k  改之前
-# precisioin=0.04473684	recall=0.05524200	coverage=0.03032105
-# 改之后
+# ml-100k
 # 都为1
 # precisioin=0.05595568	recall=0.06909526	coverage=0.04280618
 # 不考虑session

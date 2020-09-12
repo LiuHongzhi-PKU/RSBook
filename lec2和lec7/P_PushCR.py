@@ -298,5 +298,5 @@ class PPushCR(torch.nn.Module):
 if __name__ == '__main__':
     model = PPushCR("../data/ml-100k/u.data")
     model.fit(10)
-# precisioin=0.2572	recall=0.1210	coverage=0.0880
+
 # precisioin=0.2844	recall=0.1338	coverage=0.1219

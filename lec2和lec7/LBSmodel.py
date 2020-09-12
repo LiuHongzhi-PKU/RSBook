@@ -213,5 +213,3 @@ if __name__ == '__main__':
 # 前五百个用户 五百个物品
 # precisioin=0.0082	recall=0.0431	coverage=0.8048
 
-# 前一千个用户 一千个物品
-# precisioin=0.0104	recall=0.0463	coverage=0.8093

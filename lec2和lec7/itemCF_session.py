@@ -37,14 +37,13 @@ class itemCF():
     # user_basket :用户到session的映射
     # basket_item:session到item的映射
     # w1 w2 ：根据用户和session计算得到的物品相似度的权重
-    def __init__(self, data_file, K=20,N=10,similarityMeasure="cosine",w1=0,w2=1):
+    def __init__(self, data_file, K=20,N=10,similarityMeasure="cosine",w1=1,w2=1):
         self.K = K  # 近邻数
         self.N = N  # 物品推荐数
         self.w1 = w1
         self.w2 = w2#     用户和session相似度的权重
         self.similarityMeasure = similarityMeasure
-        self.loadData()
-        # self.loadData2(transPath="../data/trans.txt", usersPath="../data/users.txt", itemsPath="../data/items.txt")    # 读取数据
+        self.loadData(data_file)
         self.initModel()            # 初始化模型
         self.evaluate()
 
@@ -114,23 +113,6 @@ class itemCF():
         for i in self.item_sim:
             for j in self.item_sim[i]:
                 self.item_sim[i][j]= self.item_sim[i][j] * self.w1 + self.item_sim_basket[i][j] *self.w2
-
-
-
-
-
-
-    def loadUI(self,fname, delimiter=','):
-        idx_set = set()
-        with open(fname, 'r') as f:
-            # dicard header
-            f.readline()
-
-            for l in csv.reader(f, delimiter=delimiter, quotechar='"'):
-                idx = int(l[0])
-                idx_set.add(idx)
-        return idx_set
-
 
     def loadData(self, data_path="../data/ml-100k/u.data"):
         print("开始读数据")
@@ -238,86 +220,6 @@ class itemCF():
         self.basket_item = basket_item
         print("basket_item:", self.basket_item)
 
-    def loadData2(self, transPath, usersPath, itemsPath):
-        user_set = self.loadUI(usersPath)
-        item_set = self.loadUI(itemsPath)
-
-        user_basket = {}
-        basket = {}
-        last_user = -1
-        with open(transPath, 'r') as f:
-            for l in f:
-                l = [int(s) for s in l.strip().split()]
-                user = l[0]
-                b_tm1 = list(set(l[1:]))
-                if last_user == -1 or user != last_user:
-                    last_user = user
-                    basket = {}
-
-                basket[len(basket)] = b_tm1
-                user_basket[user] = basket
-        self.n_users = max(user_set) + 1
-        self.n_items = max(item_set) + 1
-        for i in range(10):
-            print(user_basket[i])
-        print(user_basket.keys())
-
-        user_basket_test = defaultdict(list)
-
-        print("去掉长度<3的session,去掉session数目<4的用户，然后每个用户拿1个session作为测试集")
-        for i in range(self.n_users):
-            # print(i)
-            for key in list(user_basket[i].keys()):
-                if len(user_basket[i][key]) < 3:
-                    user_basket[i].pop(key)
-            count = 0
-            for key in list(user_basket[i].keys()):
-                user_basket[i][count] = user_basket[i].pop(key)
-                count += 1
-        for i in range(self.n_users):
-            length = len(list(user_basket[i].keys()))
-            if length < 4:
-                user_basket.pop(i)
-
-        for i in list(user_basket.keys()):
-            length = len(list(user_basket[i].keys()))
-            if length <= 2:
-                continue
-            # user_basket_test[i].append(user_basket[i].pop(length - 2))
-            user_basket_test[i].append(user_basket[i].pop(length - 1))
-
-        # for i in list(user_basket_test.keys()):
-        #     print(user_basket_test[i])
-        #
-        # for i in list(user_basket.keys()):
-        #     print(user_basket[i])
-
-        self.user_basket_test = user_basket_test
-        self.user_basket = user_basket
-
-        user_item_test = {}
-        for user in self.user_basket_test:
-            user_item_test.setdefault(user, {})
-            for item in self.user_basket_test[user][0]:
-                user_item_test[user][item] = 1
-        self.user_item_test = user_item_test
-        print("user_item_test:", self.user_item_test)
-
-        user_item = {}
-        for user in self.user_basket:
-            user_item.setdefault(user, {})
-            for basket in self.user_basket[user]:
-                for item in user_basket[user][basket]:
-                    user_item[user][item] = 1
-        self.user_item = user_item
-        print("user_item:", self.user_item)
-
-        basket_item = []
-        for user in self.user_basket:
-            for basket in self.user_basket[user]:
-                basket_item.append(user_basket[user][basket])
-        self.basket_item = basket_item
-        print("basket_item:", self.basket_item)
 
     def predict(self, user):
         rank = dict()
@@ -380,19 +282,7 @@ class itemCF():
 if __name__ == '__main__':
     model = itemCF("../data/ml-100k/u.data")
 
-# 不考虑session
-#precisioin=0.0149	recall=0.0316	coverage=0.0445
 
-# 考虑session
-# precisioin=0.0144	recall=0.0305	coverage=0.0517
-
-
-# 使用movie-lens 1个会话作为测试集
-# precisioin=0.03781163	recall=0.09739565	coverage=0.21165279
-# 不考虑session
-# precisioin=0.03767313	recall=0.09703889	coverage=0.19738407
-# 不考虑用户
-# precisioin=0.02770083	recall=0.07135212	coverage=0.53507729
 
 # 2个会话作为测试集
 # precisioin=0.06994460	recall=0.08636908	coverage=0.21165279

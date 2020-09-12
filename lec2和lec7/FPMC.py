@@ -55,7 +55,7 @@ class FPMC(torch.nn.Module):
     # V_IL V_LI V_UI V_IU  ： 四个向量矩阵
     # user_basket :用户到session的映射
 
-    def __init__(self, data_file, n_factors=20, lr=0.1, weight_decay=0.005,batch_size=2048,
+    def __init__(self, n_factors=20, lr=0.1, weight_decay=0.005,batch_size=2048,
                  device=torch.device("cpu"),
                  sparse=False, topn=10):
         super(FPMC, self).__init__()
@@ -164,105 +164,6 @@ class FPMC(torch.nn.Module):
                         }
         self.user_basket = user_basket
 
-
-    def loadData(self, data_path, batch_size=2048):
-
-        print("开始读数据")
-        # load train data
-        data_fields = ['user_id', 'item_id', 'rating', 'timestamp']
-        # all data file
-        data_df = pd.read_table(data_path, names=data_fields)
-        # data_df=data_df[:100]
-        data_df.rating = (data_df.rating >= 5).astype(np.float32)
-        le = preprocessing.LabelEncoder()
-        le.fit(data_df['user_id'])
-        data_df['user_id'] = le.transform(data_df['user_id'])
-        le.fit(data_df['item_id'])
-        data_df['item_id'] = le.transform(data_df['item_id'])
-
-        self.n_users = max(data_df['user_id'].values) + 1
-        # get item number
-        self.n_items = max(data_df['item_id'].values) + 1
-
-
-        print("Initialize end.The user number is:%d,item number is:%d" % (self.n_users, self.n_items))
-
-        df = data_df
-        df.index = range(len(df))  # 重设index
-        df = df.sort_values(['user_id', 'timestamp'])
-
-        # 获取每个user对应的basket序列
-        user_basket = {}
-        basket = {0: [int(df.iloc[0].item_id)]}
-        last_user = int(df.iloc[0].user_id)
-        last_t = df.iloc[0].timestamp
-        print(df.shape[0])
-        for i in range(df.shape[0]):
-            print(i)
-            if i == 0 : continue
-
-            user = int(df.iloc[i].user_id)
-            if user != last_user:
-                last_user = user
-                basket = {}
-            t = df.iloc[i].timestamp
-            if t == last_t:
-                basket[len(basket) - 1] += [int(df.iloc[i].item_id)]
-            else:
-                basket[len(basket)] = [int(df.iloc[i].item_id)]
-                last_t = t
-            user_basket[user] = basket
-
-
-        user_basket_test=defaultdict(list)
-
-        print("去掉长度<3的session,去掉session数目<4的用户，然后每个用户拿2个session作为测试集")
-        for i in range(self.n_users):
-            print(i)
-            for key in list(user_basket[i].keys()):
-                if len(user_basket[i][key])<3:
-                    user_basket[i].pop(key)
-            count=0
-            for key in list(user_basket[i].keys()):
-                user_basket[i][count]=user_basket[i].pop(key)
-                count+=1
-        for i in range(self.n_users):
-            length = len(list(user_basket[i].keys()))
-            if length < 4:
-                user_basket.pop(i)
-
-        for i in list(user_basket.keys()):
-            length = len(list(user_basket[i].keys()))
-            if length<=2:
-                continue
-            user_basket_test[i].append(user_basket[i].pop(length-2))
-            user_basket_test[i].append(user_basket[i].pop(length - 1))
-
-        for i in list(user_basket_test.keys()):
-            print(user_basket_test[i])
-
-        for i in list(user_basket.keys()):
-            print(user_basket[i])
-
-        self.user_basket_test=user_basket_test
-
-
-
-        res = []
-        for i in user_basket:
-            res += [(i, j) for j in list(user_basket[i].keys())]
-
-        # print("res", len(res))
-
-        res = pd.DataFrame(res, columns=['user_id', 't'])
-        print(res)
-
-        df_train = res.sample(n=int(len(res) * 0.9), replace=False)
-        df_test = res.drop(df_train.index, axis=0)
-        self.loaders = {'train': df_train,
-                   'valid': df_test,
-                   }
-        self.user_basket=user_basket
 
 
     # 预测结果
@@ -451,7 +352,7 @@ class FPMC(torch.nn.Module):
         return
 
 if __name__ == '__main__':
-    model = FPMC("../data/ml-100k/u.data")
+    model = FPMC()
     model.fit(1000)
-# precisioin=0.0202	recall=0.0480	coverage=0.5172
+
 # precisioin=0.2654	recall=0.5638	coverage=0.2407
