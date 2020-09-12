@@ -132,7 +132,6 @@ class itemCF():
         # get item number
         self.n_items = max(data_df['item_id'].values) + 1
 
-
         print("Initialize end.The user number is:%d,item number is:%d" % (self.n_users, self.n_items))
 
         df = data_df
@@ -148,7 +147,7 @@ class itemCF():
         print(df.shape[0])
         for i in range(df.shape[0]):
             print(i)
-            if i == 0 : continue
+            if i == 0: continue
 
             user = int(df.iloc[i].user_id)
             if user != last_user:
@@ -162,39 +161,56 @@ class itemCF():
                 last_t = t
             user_basket[user] = basket
 
+        user_basket_test = defaultdict(list)
 
-        user_basket_test=defaultdict(list)
-
-        print("去掉长度<3的session,去掉session数目<4的用户，然后每个用户拿2个session作为测试集")
+        # print("去掉长度<3的session,去掉session数目<4的用户，然后每个用户拿4个session作为测试集")
+        print("去掉session数目<2的用户,每个用户拿10%的session作为测试集")
         for i in range(self.n_users):
-            print(i)
+            # print(i)
+            # for key in list(user_basket[i].keys()):
+            #     if len(user_basket[i][key])<3:
+            #         user_basket[i].pop(key)
+            count = 0
             for key in list(user_basket[i].keys()):
-                if len(user_basket[i][key])<3:
-                    user_basket[i].pop(key)
-            count=0
-            for key in list(user_basket[i].keys()):
-                user_basket[i][count]=user_basket[i].pop(key)
-                count+=1
+                user_basket[i][count] = user_basket[i].pop(key)
+                count += 1
         for i in range(self.n_users):
             length = len(list(user_basket[i].keys()))
-            if length < 4:
+            if length < 2:
                 user_basket.pop(i)
 
+        count = 0
+        for user in user_basket:
+            count += len(user_basket[user])
+        print("count=", count / len(user_basket))
+
         for i in list(user_basket.keys()):
             length = len(list(user_basket[i].keys()))
-            if length<=2:
-                continue
-            user_basket_test[i].append(user_basket[i].pop(length-2))
-            user_basket_test[i][0] += (user_basket[i].pop(length - 1))
 
-        for i in list(user_basket_test.keys()):
-            print(user_basket_test[i])
+            len_test = int(length * 0.1)
+            if len_test == 0:
+                len_test = 1
+            print(i, "  ", length, "   ", len_test)
+            user_basket_test[i].append(user_basket[i].pop(length - len_test))
 
-        for i in list(user_basket.keys()):
-            print(user_basket[i])
+            for j in range(len_test):
+                if j == 0:
+                    continue
+                user_basket_test[i][0] += (user_basket[i].pop(length - j))
 
-        self.user_basket_test=user_basket_test
-        self.user_basket=user_basket
+            # user_basket_test[i].append(user_basket[i].pop(length-4))
+            # user_basket_test[i][0] += (user_basket[i].pop(length - 3))
+            # user_basket_test[i][0] += (user_basket[i].pop(length - 2))
+            # user_basket_test[i][0] += (user_basket[i].pop(length - 1))
+
+        # for i in list(user_basket_test.keys()):
+        #     print(user_basket_test[i])
+        #
+        # for i in list(user_basket.keys()):
+        #     print(user_basket[i])
+
+        self.user_basket_test = user_basket_test
+        self.user_basket = user_basket
 
         user_item_test = {}
         for user in self.user_basket_test:
@@ -202,7 +218,12 @@ class itemCF():
             for item in self.user_basket_test[user][0]:
                 user_item_test[user][item] = 1
         self.user_item_test = user_item_test
-        print("user_item_test:", self.user_item_test)
+
+        count = 0
+        for user in user_item_test:
+            count += len(user_item_test[user])
+        print("count=", count)
+        # print("user_item_test:", self.user_item_test)
 
         user_item = {}
         for user in self.user_basket:
@@ -211,14 +232,14 @@ class itemCF():
                 for item in user_basket[user][basket]:
                     user_item[user][item] = 1
         self.user_item = user_item
-        print("user_item:", self.user_item)
+        # print("user_item:", self.user_item)
 
         basket_item = []
         for user in self.user_basket:
             for basket in self.user_basket[user]:
                 basket_item.append(user_basket[user][basket])
         self.basket_item = basket_item
-        print("basket_item:", self.basket_item)
+        # print("basket_item:", self.basket_item)
 
 
     def predict(self, user):
@@ -290,3 +311,7 @@ if __name__ == '__main__':
 # precisioin=0.07146814	recall=0.08825038	coverage=0.19738407
 # 不考虑用户
 #precisioin=0.04916898	recall=0.06071490	coverage=0.53507729
+
+
+# 10%
+# precisioin=0.08419936	recall=0.09178130	coverage=0.16111772

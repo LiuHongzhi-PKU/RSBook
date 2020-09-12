@@ -12,12 +12,12 @@
 
 基于会话的协同过滤（itemCF_session.py)
 数据集：movie-lens 100k
-# precisioin=0.06994460	recall=0.08636908	coverage=0.21165279
+# precisioin=0.08419936	recall=0.09178130	coverage=0.16111772
 
 
 基于会话的扩散(sessionSpreading.py)
 数据集：movie-lens 100k
-# precisioin=0.05595568	recall=0.06909526	coverage=0.04280618
+# precisioin=0.06511135	recall=0.07097445	coverage=0.05410226
 
 
 基于统一转移矩阵的序列预测(Markov.py)

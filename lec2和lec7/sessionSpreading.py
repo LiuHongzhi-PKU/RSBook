@@ -96,33 +96,53 @@ class  sessionSpreading():
 
         user_basket_test=defaultdict(list)
 
-        print("去掉长度<3的session,去掉session数目<4的用户，然后每个用户拿2个session作为测试集")
+        # print("去掉长度<3的session,去掉session数目<4的用户，然后每个用户拿4个session作为测试集")
+        print("去掉session数目<2的用户,每个用户拿10%的session作为测试集")
         for i in range(self.n_users):
-            print(i)
-            for key in list(user_basket[i].keys()):
-                if len(user_basket[i][key])<3:
-                    user_basket[i].pop(key)
+            # print(i)
+            # for key in list(user_basket[i].keys()):
+            #     if len(user_basket[i][key])<3:
+            #         user_basket[i].pop(key)
             count=0
             for key in list(user_basket[i].keys()):
                 user_basket[i][count]=user_basket[i].pop(key)
                 count+=1
         for i in range(self.n_users):
             length = len(list(user_basket[i].keys()))
-            if length < 4:
+            if length < 2:
                 user_basket.pop(i)
+
+        count = 0
+        for user in user_basket:
+            count += len(user_basket[user])
+        print("count=", count/len(user_basket))
 
         for i in list(user_basket.keys()):
             length = len(list(user_basket[i].keys()))
-            if length<=2:
-                continue
-            user_basket_test[i].append(user_basket[i].pop(length-2))
-            user_basket_test[i][0] += (user_basket[i].pop(length - 1))
 
-        for i in list(user_basket_test.keys()):
-            print(user_basket_test[i])
+            len_test=int(length*0.1)
+            if len_test ==0:
+                len_test=1
+            print(i,"  ",length, "   ", len_test)
+            user_basket_test[i].append(user_basket[i].pop(length - len_test))
 
-        for i in list(user_basket.keys()):
-            print(user_basket[i])
+            for j in range(len_test):
+                if j ==0 :
+                    continue
+                user_basket_test[i][0] += (user_basket[i].pop(length - j))
+
+            # user_basket_test[i].append(user_basket[i].pop(length-4))
+            # user_basket_test[i][0] += (user_basket[i].pop(length - 3))
+            # user_basket_test[i][0] += (user_basket[i].pop(length - 2))
+            # user_basket_test[i][0] += (user_basket[i].pop(length - 1))
+
+
+
+        # for i in list(user_basket_test.keys()):
+        #     print(user_basket_test[i])
+        #
+        # for i in list(user_basket.keys()):
+        #     print(user_basket[i])
 
         self.user_basket_test=user_basket_test
         self.user_basket=user_basket
@@ -133,7 +153,15 @@ class  sessionSpreading():
             for item in self.user_basket_test[user][0]:
                 user_item_test[user][item] = 1
         self.user_item_test = user_item_test
-        print("user_item_test:", self.user_item_test)
+
+
+
+
+        count = 0
+        for user in user_item_test:
+            count += len(user_item_test[user])
+        print("count=", count)
+        # print("user_item_test:", self.user_item_test)
 
         user_item = {}
         for user in self.user_basket:
@@ -142,14 +170,14 @@ class  sessionSpreading():
                 for item in user_basket[user][basket]:
                     user_item[user][item] = 1
         self.user_item = user_item
-        print("user_item:", self.user_item)
+        # print("user_item:", self.user_item)
 
         basket_item = []
         for user in self.user_basket:
             for basket in self.user_basket[user]:
                 basket_item.append(user_basket[user][basket])
         self.basket_item = basket_item
-        print("basket_item:", self.basket_item)
+        # print("basket_item:", self.basket_item)
 
 
     def initModel(self):
@@ -174,11 +202,11 @@ class  sessionSpreading():
         user_item = self.user_item
         basket_item = self.basket_item
 
-        print("here")
-        print(item_users)
-        print(user_item)
-        print(basket_item)
-        print(item_basket)
+        # print("here")
+        # print(item_users)
+        # print(user_item)
+        # print(basket_item)
+        # print(item_basket)
 
 
         self.rec_item = defaultdict(list)
@@ -276,9 +304,16 @@ if __name__ == '__main__':
 
 
 # ml-100k
+# 两个session
 # 都为1
 # precisioin=0.05595568	recall=0.06909526	coverage=0.04280618
 # 不考虑session
 # precisioin=0.04681440	recall=0.05780742	coverage=0.03032105
 # 不考虑用户
 # precisioin=0.06218837	recall=0.07679152	coverage=0.07372176
+
+# 20%
+# precisioin=0.11155885	recall=0.05886961	coverage=0.05112961
+
+# 10%
+# precisioin=0.06511135	recall=0.07097445	coverage=0.05410226
