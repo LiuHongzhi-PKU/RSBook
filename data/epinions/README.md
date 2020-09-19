@@ -1,5 +1,9 @@
-The following is a description of the original Epinions dataset. (You can check it out at http://www.trustlet.org/epinions.html)
+# Simplified Epinions Dataset
 
+The Epinions dataset is a classic dataset often used in the evaluation of social recommendation algorithms. Since the original Epinions dataset is a little bit large, we used a simplified version of Epinions dataset in the experiment of Chapter 10, which contains 3139 users and 8145 items. The dataset is cropped from the original Epinions dataset.
+
+# Original Epinions Dataset
+The following is a description of the original Epinions dataset. (You can check it out at http://www.trustlet.org/epinions.html)
 
 We have collected and released 2 different versions of Epinions datasets:
 
@@ -55,3 +59,4 @@ Ranges:
 * trust_statement_value is always 1 (since in the dataset there are only positive trust statements and not negative ones (distrust)).
 
 Note: there are no distrust statements in the dataset (block list) but only trust statements (web of trust), because the block list is kept private and not shown on the site.
+
