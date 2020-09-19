@@ -154,3 +154,8 @@ if __name__ == '__main__':
     ev = evaluate(modelType.rating)
     ev.evaluateModel(model)
     print('done!')
+        
+    # Initialize end. The user number is: 3139, item number is: 8145
+    # Evaluating start ...
+    # 平均绝对值误差= 0.19047773008069102
+    # done!
