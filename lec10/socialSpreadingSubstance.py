@@ -21,7 +21,7 @@ class  socialSpreadingSubstance():
     # n_users：用户数目
     # n_items：项目数目
     # rec_item：在初始化模型时就已经给每个用户对所有物品排好序
-    def __init__(self, data_file,step=5,N=10):
+    def __init__(self, data_file,step=2,N=10):
         self.step = step
         self.N = N  # 物品推荐数
         self.loadData(data_file)  # 读取数据
@@ -127,3 +127,8 @@ if __name__ == '__main__':
     ev = evaluate(modelType.topN)
     ev.evaluateModel(model)
     print('done!')
+
+    # 100%|██████████| 3123/3123 [30:44<00:00,  1.69it/s]
+    # Evaluating start ...
+    # precisioin=0.0156	recall=0.0415	coverage=0.0413
+    # done!
