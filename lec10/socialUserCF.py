@@ -24,7 +24,7 @@ class socialUserCF():
     # interest_sim：用户之间的兴趣相似度。二维字典。u->v->相似度
     # user_sim：由熟悉度和兴趣相似度构建的用户相似度。二维字典。u->v->相似度
     # alpha：计算用户相似度时熟悉度的权重，兴趣相似度的权重为1-alpha
-    def __init__(self, data_file, K=20,alpha=0.8):
+    def __init__(self, data_file, K=20,alpha=0.3):
         self.K = K  # 近邻数
         self.alpha = alpha
         self.loadData(data_file)  # 读取数据
@@ -71,7 +71,7 @@ class socialUserCF():
                 set_v=set(items_v)
                 self.interest_sim[u][v] = len(set_u.intersection(set_v)) / len(set_u.union(set_v))
                 
-        alpha = 0.3
+        # alpha = 0.3
         self.user_sim = dict()
         self.potential_users = set(self.train_data).union(set(self.social_user))
         for u in self.potential_users:
@@ -81,9 +81,9 @@ class socialUserCF():
                     continue
                 self.user_sim[u][v] = 0
                 if u in self.familiarity and v in self.familiarity[u]:
-                  self.user_sim[u][v] += alpha * self.familiarity[u][v]
+                  self.user_sim[u][v] += self.alpha * self.familiarity[u][v]
                 if u in self.interest_sim and v in self.interest_sim[u]:
-                  self.user_sim[u][v] += (1 - alpha) * self.interest_sim[u][v]
+                  self.user_sim[u][v] += (1 - self.alpha) * self.interest_sim[u][v]
     def loadData(self, data_path):
 
         # 二维字典
@@ -123,7 +123,7 @@ class socialUserCF():
 
         print("Initialize end. The user number is: %d, item number is: %d" % (self.n_users, self.n_items))
     def predict(self, user, item):
-        if user not in model.potential_users:
+        if user not in self.potential_users:
           return 0
         # 分子和分母
         C1 = 0

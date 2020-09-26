@@ -12,7 +12,8 @@ from tqdm import tqdm
 
 np.random.seed(1111)
 
-class  socialSpreadingSubstance():
+
+class socialSpreadingSubstance():
     # 参数
     # step: 扩散的轮数
     # N：物品推荐数目
@@ -21,12 +22,13 @@ class  socialSpreadingSubstance():
     # n_users：用户数目
     # n_items：项目数目
     # rec_item：在初始化模型时就已经给每个用户对所有物品排好序
-    def __init__(self, data_file,step=2,N=10):
+    # alpha: 社交关系边的权重。
+    def __init__(self, data_file, step=2, N=10, alpha=2):
         self.step = step
         self.N = N  # 物品推荐数
+        self.alpha = alpha  # 社交关系边的权重。
         self.loadData(data_file)  # 读取数据
         self.initModel()
-
 
     def loadData(self, data_path):
 
@@ -35,27 +37,27 @@ class  socialSpreadingSubstance():
         self.train_data = {}
         trainset_rate = 0.9
 
-        data_df = pd.read_table(data_path+'data_df.txt',sep=' ')
+        data_df = pd.read_table(data_path + 'data_df.txt', sep=' ')
         data_df['rating'] /= max(data_df['rating'])
-        social_df = pd.read_table(data_path+'social_df.txt',sep=' ')
+        social_df = pd.read_table(data_path + 'social_df.txt', sep=' ')
 
         le = preprocessing.LabelEncoder()
         le.fit(data_df['user_id'])
-        data_df['user_id']=le.transform(data_df['user_id'])
-        social_df['user_id']=le.transform(social_df['user_id'])
-        social_df['user_id2']=le.transform(social_df['user_id2'])
+        data_df['user_id'] = le.transform(data_df['user_id'])
+        social_df['user_id'] = le.transform(social_df['user_id'])
+        social_df['user_id2'] = le.transform(social_df['user_id2'])
         le.fit(data_df['item_id'])
-        data_df['item_id']=le.transform(data_df['item_id'])
+        data_df['item_id'] = le.transform(data_df['item_id'])
 
         df_train = data_df.sample(n=int(len(data_df) * trainset_rate), replace=False)
         df_test = data_df.drop(df_train.index, axis=0)
 
         for (user, item, record) in df_test.itertuples(index=False):
-              self.test_data.setdefault(user, {})
-              self.test_data[user][item] = record
+            self.test_data.setdefault(user, {})
+            self.test_data[user][item] = record
         for (user, item, record) in df_train.itertuples(index=False):
-              self.train_data.setdefault(user, {})
-              self.train_data[user][item] = record
+            self.train_data.setdefault(user, {})
+            self.train_data[user][item] = record
 
         self.social_user = {}
         for (user, user2, record) in social_df.itertuples(index=False):
@@ -74,7 +76,6 @@ class  socialSpreadingSubstance():
                     item_users[i] = set()
                 item_users[i].add(u)
 
-
         user_items = self.train_data
         user_users = self.social_user
         self.rec_item = defaultdict(list)
@@ -85,26 +86,34 @@ class  socialSpreadingSubstance():
             for i in user_items[u]:
                 item_cnt[i] = 1
 
-            for k in range(3*self.step):
+            for k in range(3 * self.step):
                 if k % 2 == 0:
                     # 项目扩散用户
                     user_cnt = defaultdict(int)
                     for item in item_cnt:
                         for user in item_users[item]:
                             user_cnt[user] += item_cnt[item] / len(item_users[item])
-                elif k % 2 ==1:
+                elif k % 2 == 1:
                     # 用户扩散项目和信任用户
                     item_cnt = defaultdict(int)
                     user_cnt_new = defaultdict(int)
-                    for user in user_cnt:
-                        for item in user_items[user]:
-                            if user in user_users:
-                                item_cnt[item] += user_cnt[user] / (len(user_items[user])+len(user_users[user]))
-                            else:
-                                item_cnt[item] += user_cnt[user] / len(user_items[user])
+                    for user in user_cnt:  # 所有用户
+                        # 根据权重不同，item和user被扩散的量是不一样的
                         if user in user_users:
+                            to_item = (user_cnt[user] / (
+                                    len(user_items[user]) * self.alpha + len(user_users[user]))) * self.alpha
+                            to_user = (user_cnt[user] / (len(user_items[user]) * self.alpha + len(user_users[user])))
+                        else:
+                            to_item=user_cnt[user] / len(user_items[user])
+                            to_user=0
+                        for item in user_items[user]:  # 这个用户的所有物品
+                            if user in user_users:  # 如果该用户有好友，则应同时扩散好友和物品。这里是物品
+                                item_cnt[item] += to_item
+                            else:  # 否则只扩散物品
+                                item_cnt[item] += to_item
+                        if user in user_users:  # 这是扩散给好友
                             for trusted_user in user_users[user]:
-                                user_cnt_new[trusted_user] += user_cnt[user] / (len(user_items[user])+len(user_users[user]))
+                                user_cnt_new[trusted_user] += to_user
                 else:
                     # 用户扩散项目
                     for user in user_cnt_new:
@@ -132,3 +141,14 @@ if __name__ == '__main__':
     # Evaluating start ...
     # precisioin=0.0156	recall=0.0415	coverage=0.0413
     # done!
+
+# alpha=0
+# 100%|██████████| 3123/3123 [33:12<00:00,  1.57it/s]
+# Evaluating start ...
+# precisioin=0.0110	recall=0.0294	coverage=0.1942
+# done!
+
+# alpha=2
+# Evaluating start ...
+# precisioin=0.0159	recall=0.0423	coverage=0.0390
+# done!
