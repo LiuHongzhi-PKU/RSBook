@@ -93,6 +93,12 @@ class itemCF():
                 else:
                     self.item_sim[i][j] = C1[i][j] / math.sqrt(C2[i][j] * C3[i][j])
 
+        #每个物品的邻域
+        self.item_nei={}
+        for item in self.item_sim.keys():
+            simi_items=sorted(self.item_sim[item].items(), key=itemgetter(1), reverse=True)[:self.K]
+            self.item_nei[item]=simi_items
+
     def loadData(self, data_file):
         data_fields = ['user_id', 'item_id', 'rating', 'timestamp']
         data = pd.read_table(data_file, names=data_fields)
@@ -121,12 +127,19 @@ class itemCF():
         C2 = 0
         if not item in self.item_sim:
             return rui
-        for similar_item, similarity_factor in sorted(self.item_sim[item].items(),
-                                                      key=itemgetter(1), reverse=True)[:self.K]:
-            if similar_item not in self.train_data[user]:
-                continue
-            C1 += similarity_factor * self.train_data[user][similar_item]
-            C2 += math.fabs(similarity_factor)
+        for interacted_item in self.train_data[user]:
+            simi_items = self.item_nei[interacted_item]
+            for similar_item, similarity_factor in simi_items:
+                if item == similar_item:
+                    C1 += similarity_factor * self.train_data[user][interacted_item]
+                    C2 += math.fabs(similarity_factor)
+        #
+        # for similar_item, similarity_factor in sorted(self.item_sim[item].items(),
+        #                                               key=itemgetter(1), reverse=True)[:self.K]:
+        #     if similar_item not in self.train_data[user]:
+        #         continue
+        #     C1 += similarity_factor * self.train_data[user][similar_item]
+        #     C2 += math.fabs(similarity_factor)
         if not C1 == 0:
             rui = (C1 / C2)
         return rui
@@ -143,5 +156,5 @@ if __name__ == '__main__':
     ev=evaluate(modelType.rating)
     ev.evaluateModel(model)
     print('done!')
-# 皮尔逊相似度：平均绝对值误差= 1.169491008089159  均方根误差= 2.304314566722904
-# 余弦相似度：平均绝对值误差= 1.1192802133322162   均方根误差= 2.1476788983976296
+# 余弦相似度：平均绝对值误差= 1.1449563800161946 均方根误差= 2.22600813251409
+# 余弦相似度：平均绝对值误差= 1.1399839529656934   均方根误差= 2.219480403341986

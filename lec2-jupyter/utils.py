@@ -16,7 +16,7 @@ import torch.utils.data as data
 from tqdm import tqdm
 np.random.seed(1024)
 from operator import itemgetter
-from tqdm import tqdm
+
 
 
 # 枚举类  模型评估时选择使用哪种方式
@@ -41,8 +41,7 @@ class evaluate():
         sum_rui = 0
         mse = 0
 
-        pbar = tqdm(model.test_data.keys())
-        for user in pbar:
+        for user in model.test_data:
             for movie in model.test_data[user]:
                 rui = model.predict(user, movie)  # 预测的评分
                 if rui == 0:  # 说明用户u评分过的物品中没有i的邻域

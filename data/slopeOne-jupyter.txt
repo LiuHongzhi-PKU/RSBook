@@ -1,0 +1,11 @@
+A	a	5
+A	b	10
+A	c	10
+A	d	5
+B	a	4
+B	b	5
+B	c	4
+B	d	10
+C	a	4
+C	c	10
+C	d	5
