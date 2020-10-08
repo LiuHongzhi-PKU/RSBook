@@ -1,0 +1,25 @@
+新闻数据集部分抽样：https://msnews.github.io/
+
+基于词向量空间模型的文本表示（TF-IDF模型）
+tfidfCF.py
+# precision=0.0226	recall=0.0089	coverage=0.5537
+
+朴素item_cf
+itemCF_news.py
+# precision=0.0117	recall=0.0046	coverage=0.2476
+
+基于语料库的文本相似度（PMI-IR）
+PMI_IR_CF.py
+# precision=0.0098	recall=0.0039	coverage=0.1886
+
+基于约束的推荐（基于约束的推荐——MinRelax.ipynb）
+数据：笔记本集合.csv
+示例代码，无评估
+
+基于效用的推荐（基于效用的推荐.ipynb）
+数据：笔记本集合.csv
+示例代码，无评估
+
+基于实例的推荐（基于实例的推荐.ipynb）
+数据：笔记本集合.csv
+示例代码，无评估

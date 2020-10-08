@@ -1,0 +1,24 @@
+使用两个不同参数的lfm模型进行融合
+原始数据：movielens-100k
+输入数据：stacking_train.csv和stacking_test.csv
+
+LFM1:（LFM与平均融合.ipynb）
+mse:	1.3026
+mae:	0.8779
+
+LFM2:（LFM与平均融合.ipynb）
+mse:	1.1066
+mae:	0.8169
+
+平均融合（LFM与平均融合.ipynb）
+mse:	1.0099
+mae:	0.7866
+
+逻辑回归stacking（逻辑回归stacking.ipynb）
+mse:	1.1399
+mae:	0.8274
+
+波达计数（波达计数.ipynb）
+
+基于图模型的混合
+待补充（细节有些问题）
