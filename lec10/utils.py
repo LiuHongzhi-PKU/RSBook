@@ -24,7 +24,7 @@ class Interactions(data.Dataset):
         df.index=range(len(df)) # 重设index
         self.df=df
         self.user_item = {}
-        for (user, item, record, timestamp) in df.itertuples(index=False):
+        for (user, item, record) in df.itertuples(index=False):
             self.user_item.setdefault(user-1,{})
             self.user_item[user-1][item-1] = record
 
