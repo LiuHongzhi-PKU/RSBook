@@ -56,16 +56,22 @@ class evaluate():
     def evaluateRating(self,model):
         print('Evaluating start ...')
         count = 0
-        sum_r_ui = 0
+        mae = 0
+        mse = 0
 
         for user in model.test_data:
             for item in model.test_data[user]:
-                r_ui = model.predict(user, item)  # 预测的评分
-                if r_ui == 0:  # 说明用户u评分过的物品中没有i的邻域
+                rui = model.predict(user, item)  # 预测的评分
+                if rui == 0:  # 说明用户u评分过的物品中没有i的邻域
                     continue
                 count += 1
-                sum_r_ui += math.fabs(model.test_data[user][item] - r_ui)
-        print("平均绝对值误差=", sum_r_ui / count)
+                mae += math.fabs(model.test_data[user][item] - rui)
+                mse += math.pow(model.test_data[user][item] - rui,2)
+        mae /= count
+        mse /= count
+        print("平均绝对值误差=", mae)
+        print("均方误差=", mse)
+        print("均方根误差=", math.sqrt(mse))
 
     def evaluateTopN(self,model):
         print('Evaluating start ...')

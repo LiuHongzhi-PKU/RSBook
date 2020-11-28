@@ -158,4 +158,6 @@ if __name__ == '__main__':
     # Initialize end. The user number is: 3139, item number is: 8145
     # Evaluating start ...
     # 平均绝对值误差= 0.19047773008069102
+    # 均方误差= 0.06301188859745788
+    # 均方根误差= 0.251021689496063
     # done!
