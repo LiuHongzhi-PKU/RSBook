@@ -7,7 +7,7 @@ Epinions数据集是一个典型的数据集，常被用于社交推荐算法的
 # Original Epinions Dataset 原始Epinions数据集
 The following is a description of the original Epinions dataset. (You can check it out at http://www.trustlet.org/epinions.html)
 
-以下是原始Epinions数据集的描述。（你可以在http://www.trustlet.org/epinions.html查阅）
+以下是原始Epinions数据集的描述。（你可以在http://www.trustlet.org/epinions.html 查阅）
 
 We have collected and released 2 different versions of Epinions datasets:
 
