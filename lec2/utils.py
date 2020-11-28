@@ -51,7 +51,7 @@ class evaluate():
                 sum_rui += math.fabs(model.test_data[user][movie] - rui)
                 mse += math.pow(model.test_data[user][movie] - rui,2)
         print("平均绝对值误差=", sum_rui / count)
-        print("均方根误差=", mse / count)
+        print("均方误差=", mse / count)
 
     def evaluateTopN(self,model):
         print('Evaluating start ...')
