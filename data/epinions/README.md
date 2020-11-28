@@ -1,9 +1,13 @@
-# Simplified Epinions Dataset
+# Simplified Epinions Dataset 简化的Epinions数据集
 
 The Epinions dataset is a classic dataset often used in the evaluation of social recommendation algorithms. Since the original Epinions dataset is a little bit large, we used a simplified version of Epinions dataset in the experiment of Chapter 10, which contains 3139 users and 8145 items. The dataset is cropped from the original Epinions dataset.
 
-# Original Epinions Dataset
+Epinions数据集是一个典型的数据集，常被用于社交推荐算法的评价中。由于原始的Epinions数据集有点大，我们在第10章的实验中使用了一个简化版本的Epinions数据集，它包含3139个用户和8145个物品。数据集是从原始的Epinions数据集裁剪而来的。
+
+# Original Epinions Dataset 原始Epinions数据集
 The following is a description of the original Epinions dataset. (You can check it out at http://www.trustlet.org/epinions.html)
+
+以下是原始Epinions数据集的描述。（你可以在http://www.trustlet.org/epinions.html查阅)
 
 We have collected and released 2 different versions of Epinions datasets:
 
