@@ -1,0 +1,26 @@
+第三章全部算法使用的数据集均为movie-lens 100k
+
+Apriori（Apriori.py）
+获得关联规则以及对应的置信度，无评估
+
+LFM（LFM.py）
+MAE:0.745
+MSE:0.896
+
+SVD（SVD++.py）
+MAE:0.507
+MSE:0.321
+
+CPMF（CPMF.py）
+MAE 0.513
+MSE 0.279
+
+WRMF（WRMF.py）
+precision=0.2247	
+recall=0.1057	
+coverage=0.0351
+
+负样本欠采样（under_sampling.py）
+precision=0.2100	
+recall=0.1064	
+coverage=0.0465
