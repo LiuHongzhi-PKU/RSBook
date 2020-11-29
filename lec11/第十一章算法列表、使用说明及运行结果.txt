@@ -1,5 +1,6 @@
 pathSim（非对称路径的pathSim.ipynb）
-用于非对称路径的pathSim变形（见论文xxx部分，无特殊说明时，该算法作为默认的异质信息网络元路径相似度计算方法）
+用于非对称路径的pathSim变形（参见论文Hete-CF: Social-Based Collaborative Filtering
+Recommendation using Heterogeneous Relations，无特殊说明时，该算法作为默认的异质信息网络元路径相似度计算方法）
 
 随机游走（随机游走示例.ipynb）
 数据集：movie-lens 100k
@@ -10,11 +11,8 @@ heteMF.py
 heteCF.py
 # precision=0.0995	recall=0.0921	coverage=0.1064
 
-FMG
-待整理
+FMG (FMG数据生成.ipynb、FMG model emb转fm输入.ipynb)
+mse 7.798
 
 SemRec.py
 # precision=0.1290	recall=0.0607	coverage=0.1361
-
-HueRec
-待调参
