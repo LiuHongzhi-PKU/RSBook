@@ -16,9 +16,7 @@ http://www.cmpedu.com/books/book/5601946.htm
 ## 开发环境
 
 python 3.7.3
-
 numpy 1.16
-
 pytorch 1.1.0
 
 ## 目录简介
