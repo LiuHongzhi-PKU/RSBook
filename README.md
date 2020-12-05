@@ -13,6 +13,14 @@ http://www.cmpedu.com/books/book/5601946.htm
 ## 主要贡献人
 王缤 周昭育 王澳博 刘鸿达    
 
+## 开发环境
+
+python 3.7.3
+
+numpy 1.16
+
+pytorch 1.1.0
+
 ## 目录简介
 data：算法实现用到的数据     
 Ch2：基于邻域的协同过滤    
