@@ -16,9 +16,9 @@ http://www.cmpedu.com/books/book/5601946.htm
 王缤 周昭育 王澳博 刘鸿达    
 
 ## 开发环境
-python 3.7.3
-numpy 1.16
-pytorch 1.1.0
+python 3.7.3 
+numpy 1.16 
+pytorch 1.1.0 
 
 ## 代码目录
 data：算法测试用到的数据集     
