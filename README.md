@@ -7,7 +7,7 @@
 
 刘宏志 编著.《推荐系统》. ISBN: 9787111649380. 机械工业出版社. 2020。    
 http://www.cmpedu.com/books/book/5601946.htm  
-
+  ![Image text]( https://github.com/LiuHongzhi-PKU/RSBook/blob/master/cover.jpg)
 
 
 ## 主要贡献人
