@@ -11,6 +11,10 @@
 http://www.cmpedu.com/books/book/5601946.htm  
   <img src="https://github.com/LiuHongzhi-PKU/RSBook/blob/master/cover.jpg" width = "300" height = "400" alt="" align="教材封面" />
 
+### 配套MOOC
+1. 采用问题引导与示例展示相结合的讲解方式，通过图、表等可视化方式直观展示算法的思想、原理和具体步骤。       
+2. 分知识点录制教学视频，每个视频长度约10~15分钟，并配有相应的课件。      
+3. MOOC网址：http://www.chinesemooc.org/mooc/5013       
 
 ### 主要贡献人
 王缤 周昭育 王澳博 刘鸿达    
