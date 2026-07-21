@@ -13,7 +13,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.utils.extmath import randomized_svd
 
 # 设置是否使用隐式反馈
-IMPLICT=False
+IMPLICIT=False
 # 设置是否使用超小数据集测试
 SMALL=False
 
@@ -39,7 +39,7 @@ def getDataLoader(data_path, batch_size=2048):
     data_df = pd.read_table(data_path, names=data_fields)
     if SMALL:
         data_df = data_df.sample(n=int(len(data_df) * 0.1), replace=False)
-    if IMPLICT:
+    if IMPLICIT:
         data_df.rating = (data_df.rating >= 5).astype(np.float32)
 
     # 数据离散化编码
